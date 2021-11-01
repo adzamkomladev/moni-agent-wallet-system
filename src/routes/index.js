@@ -1,10 +1,11 @@
-import express from 'express'
-import {getMathRoutes} from './math'
+import express from "express";
+
+import { getAgentRoutes } from "./agent";
 
 function getRoutes() {
-  const router = express.Router()
-  router.use('/math', getMathRoutes())
-  return router
+  const router = express.Router();
+  router.use("/agents", getAgentRoutes());
+  return router;
 }
 
-export {getRoutes}
+export { getRoutes };
