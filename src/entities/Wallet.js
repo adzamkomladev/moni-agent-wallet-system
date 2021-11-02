@@ -1,24 +1,25 @@
 const EntitySchema = require("typeorm").EntitySchema;
 
 module.exports = new EntitySchema({
-  name: "Agent",
-  tableName: "agents",
+  name: "Wallet",
+  tableName: "wallets",
   columns: {
     id: {
       primary: true,
       type: "int",
       generated: true,
     },
-    name: {
-      type: "varchar",
-      length: "255",
-    },
-    email: {
-      type: "varchar",
-      length: "100",
-    },
-    password: {
+    walletNumber: {
       type: "text",
+    },
+    balance: {
+      type: "decimal",
+      precision: 18,
+      scale: 4,
+    },
+    currency: {
+      type: "varchar",
+      length: 20,
     },
     createdAt: {
       type: "timestamp",
@@ -30,10 +31,15 @@ module.exports = new EntitySchema({
     },
   },
   relations: {
-    wallets: {
-      target: "Wallet",
+    agent: {
+      target: "Agent",
+      type: "many-to-one",
+      joinColumn: true,
+    },
+    walletTransactions: {
+      target: "WalletTransaction",
       type: "one-to-many",
-      inverseSide: "agent",
+      inverseSide: "wallet",
     },
   },
 });

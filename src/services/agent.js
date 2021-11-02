@@ -4,24 +4,37 @@ import bcrypt from "bcrypt";
 
 async function createAgent(requestBody) {
   let connection;
+
   try {
     connection = await createConnection();
-    
+
     const { name, email, password } = requestBody;
     const agentData = {
       name,
       email,
       password: await bcrypt.hash(password, 10),
-      wallet_id: uuidv4(),
-      wallet_balance: 0,
     };
 
-    const agentRepository = connection.getRepository("Agent");
-    const agent = await agentRepository.save(agentData);
+    const walletData = {
+      walletNumber: uuidv4(),
+      balance: 0,
+      currency: "GHS",
+    };
 
-    return agent;
+    return await connection.transaction(async (transactionalEntityManager) => {
+      const wallet = await transactionalEntityManager.save(
+        "Wallet",
+        walletData
+      );
+
+      return await transactionalEntityManager.save("Agent", {
+        ...agentData,
+        wallets: [wallet],
+      });
+    });
   } catch (error) {
-    console.log("Error creating agent", error);
+    console.log("Error creating agent and wallet", error);
+    throw error;
   } finally {
     connection?.close();
   }
