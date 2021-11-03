@@ -1,15 +1,25 @@
 import express from "express";
+import { body, param, validationResult } from "express-validator";
 
-import {
-  topUpWallet,
-  withdrawFromWallet,
-} from "../services/wallet";
+import { topUpWallet, withdrawFromWallet } from "../services/wallet";
 
 function getWalletRoutes() {
   const router = express.Router();
 
-  router.post("/:id/top-up", topUp);
-  router.post("/:id/withdraw", withdraw);
+  router.post(
+    "/:id/top-up",
+    [param("id").exists().isNumeric(), body("amount").exists().isNumeric()],
+    topUp
+  );
+  router.post(
+    "/:id/withdraw",
+    [
+      param("id").exists().isNumeric(),
+      body("amount").exists().isNumeric(),
+      body("agentId").exists().isNumeric(),
+    ],
+    withdraw
+  );
 
   return router;
 }
@@ -19,6 +29,12 @@ async function topUp(req, res) {
   const id = req.params.id;
 
   try {
+    const errors = validationResult(req); // Finds the validation errors in this request and wraps them in an object with handy functions
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const walletTopUpData = {
       id,
       amount: body.amount,
@@ -61,6 +77,12 @@ async function withdraw(req, res) {
   const id = req.params.id;
 
   try {
+    const errors = validationResult(req); // Finds the validation errors in this request and wraps them in an object with handy functions
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const walletWithdrawalData = {
       id,
       amount: body.amount,

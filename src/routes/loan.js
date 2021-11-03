@@ -1,11 +1,21 @@
 import express from "express";
 
+import { body, param, validationResult } from "express-validator";
+
 import { repayLoanFromWallet } from "../services/loan";
 
 function getLoanRoutes() {
   const router = express.Router();
 
-  router.post("/:id/wallets/pay", repayLoan);
+  router.post(
+    "/:id/wallets/pay",
+    [
+      param("id").exists().isNumeric(),
+      body("amount").exists().isNumeric(),
+      body("walletId").exists().isInt(),
+    ],
+    repayLoan
+  );
 
   return router;
 }
@@ -15,6 +25,12 @@ async function repayLoan(req, res) {
   const id = req.params.id;
 
   try {
+    const errors = validationResult(req); // Finds the validation errors in this request and wraps them in an object with handy functions
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const walletWithdrawalData = {
       id,
       amount: body.amount,

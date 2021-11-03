@@ -1,4 +1,5 @@
 import express from "express";
+import { body, param, query, validationResult } from "express-validator";
 
 import { receiveLoan } from "../services/loan";
 import { filterAndPaginateWalletTransactions } from "../services/wallet";
@@ -6,8 +7,31 @@ import { filterAndPaginateWalletTransactions } from "../services/wallet";
 function getAgentRoutes() {
   const router = express.Router();
 
-  router.post("/:id/loans/receive", getLoan);
-  router.get("/:id/wallet-transactions", findAllWalletTransactions);
+  router.post(
+    "/:id/loans/receive",
+    [
+      body("amount").exists().isNumeric(),
+      body("reason").exists(),
+      body("deadline").exists().isDate(),
+      body("walletId").exists().isNumeric(),
+      param("id").exists().isNumeric(),
+    ],
+    getLoan
+  );
+  router.get(
+    "/:id/wallet-transactions",
+    [
+      param("id").exists().isNumeric(),
+      query("page").optional().isInt(),
+      query("size").optional().isInt(),
+      query("type")
+        .optional()
+        .isIn(["Credit", "Debit", "Loan Repayment", "Loan Deposit"]),
+      query("start").optional().isDate(),
+      query("end").optional().isDate(),
+    ],
+    findAllWalletTransactions
+  );
 
   return router;
 }
@@ -17,6 +41,12 @@ async function getLoan(req, res) {
   const id = req.params.id;
 
   try {
+    const errors = validationResult(req); // Finds the validation errors in this request and wraps them in an object with handy functions
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const receiveLoanData = {
       id,
       amount: body.amount,
@@ -65,6 +95,12 @@ async function findAllWalletTransactions(req, res) {
   };
 
   try {
+    const errors = validationResult(req); // Finds the validation errors in this request and wraps them in an object with handy functions
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const paginatedData = await filterAndPaginateWalletTransactions(
       filterAndPaginationData
     );

@@ -1,12 +1,40 @@
 import express from "express";
 
+import { body, validationResult } from "express-validator";
+
+import { findAgentViaEmail } from "../services/agent";
 import { agentLogin, registerAgent } from "../services/auth";
 
 function getAuthRoutes() {
   const router = express.Router();
 
-  router.post("/register", register);
-  router.post("/login", login);
+  router.post(
+    "/register",
+    [
+      body("name").exists(),
+      body("email")
+        .exists()
+        .isEmail()
+        .normalizeEmail()
+        .custom((value) => {
+          return findAgentViaEmail(value).then((agent) => {
+            if (agent) {
+              return Promise.reject("E-mail already in use");
+            }
+          });
+        }),
+      body("password").exists(),
+    ],
+    register
+  );
+  router.post(
+    "/login",
+    [
+      body("email").exists().isEmail().normalizeEmail(),
+      body("password").exists(),
+    ],
+    login
+  );
 
   return router;
 }
@@ -15,6 +43,12 @@ async function login(req, res) {
   const body = req.body;
 
   try {
+    const errors = validationResult(req); // Finds the validation errors in this request and wraps them in an object with handy functions
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const agent = await agentLogin(body);
 
     return res.status(200).json({
@@ -38,6 +72,12 @@ async function register(req, res) {
   const body = req.body;
 
   try {
+    const errors = validationResult(req); // Finds the validation errors in this request and wraps them in an object with handy functions
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const agent = await registerAgent(body);
 
     return res.status(201).json({

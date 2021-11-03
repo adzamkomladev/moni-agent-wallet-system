@@ -54,4 +54,21 @@ async function createAgent(requestBody) {
   }
 }
 
-export { createAgent };
+async function findAgentViaEmail(email) {
+  let connection;
+
+  try {
+    connection = await createConnection();
+
+    return await connection.getRepository("Agent").findOne({
+      where: { email },
+    });
+  } catch (error) {
+    console.log("Error finding agent via email", error);
+    throw error;
+  } finally {
+    connection?.close();
+  }
+}
+
+export { createAgent, findAgentViaEmail };
