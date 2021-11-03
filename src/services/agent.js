@@ -1,6 +1,7 @@
 import { createConnection } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 async function createAgent(requestBody) {
   let connection;
@@ -27,10 +28,23 @@ async function createAgent(requestBody) {
         walletData
       );
 
-      return await transactionalEntityManager.save("Agent", {
+      const agent = await transactionalEntityManager.save("Agent", {
         ...agentData,
         wallets: [wallet],
       });
+
+      // Create token
+      const token = jwt.sign(
+        { agentId: agent.id, email, name },
+        process.env.TOKEN_KEY,
+        {
+          expiresIn: "2h",
+        }
+      );
+
+      agent.token = token;
+
+      return agent;
     });
   } catch (error) {
     console.log("Error creating agent and wallet", error);

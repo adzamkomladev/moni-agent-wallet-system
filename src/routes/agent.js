@@ -1,4 +1,5 @@
 import express from "express";
+import { verifyToken } from "../middlewares/auth";
 
 import { createAgent } from "../services/agent";
 import { receiveLoan } from "../services/loan";
@@ -8,8 +9,12 @@ function getAgentRoutes() {
   const router = express.Router();
 
   router.post("/", create);
-  router.post("/:id/loans/receive", getLoan);
-  router.get("/:id/wallet-transactions", findAllWalletTransactions);
+  router.post("/:id/loans/receive", verifyToken, getLoan);
+  router.get(
+    "/:id/wallet-transactions",
+    verifyToken,
+    findAllWalletTransactions
+  );
 
   return router;
 }
@@ -22,6 +27,7 @@ async function create(req, res) {
 
     return res.status(201).json({
       id: agent.id,
+      token: agent.token,
       name: agent.name,
       email: agent.email,
       createdAt: agent.createdAt,
