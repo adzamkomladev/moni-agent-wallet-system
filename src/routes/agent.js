@@ -2,12 +2,14 @@ import express from "express";
 
 import { createAgent } from "../services/agent";
 import { receiveLoan } from "../services/loan";
+import { filterAndPaginateWalletTransactions } from "../services/wallet";
 
 function getAgentRoutes() {
   const router = express.Router();
 
   router.post("/", create);
   router.post("/:id/loans/receive", getLoan);
+  router.get("/:id/wallet-transactions", findAllWalletTransactions);
 
   return router;
 }
@@ -70,6 +72,29 @@ async function getLoan(req, res) {
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
+  }
+}
+
+async function findAllWalletTransactions(req, res) {
+  const filterAndPaginationData = {
+    id: req.params.id,
+    page: req.query.page,
+    size: req.query.size,
+    start: req.query.start,
+    end: req.query.end,
+    type: req.query.type,
+  };
+
+  try {
+    const paginatedData = await filterAndPaginateWalletTransactions(
+      filterAndPaginationData
+    );
+
+    return res.json(paginatedData);
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 }
 

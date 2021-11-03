@@ -1,7 +1,9 @@
 import express from "express";
-import { repayLoanFromWallet } from "../services/loan";
 
-import { topUpWallet, withdrawFromWallet } from "../services/wallet";
+import {
+  topUpWallet,
+  withdrawFromWallet,
+} from "../services/wallet";
 
 function getWalletRoutes() {
   const router = express.Router();
