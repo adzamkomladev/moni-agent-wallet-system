@@ -1,42 +1,15 @@
 import express from "express";
-import { verifyToken } from "../middlewares/auth";
 
-import { createAgent } from "../services/agent";
 import { receiveLoan } from "../services/loan";
 import { filterAndPaginateWalletTransactions } from "../services/wallet";
 
 function getAgentRoutes() {
   const router = express.Router();
 
-  router.post("/", create);
-  router.post("/:id/loans/receive", verifyToken, getLoan);
-  router.get(
-    "/:id/wallet-transactions",
-    verifyToken,
-    findAllWalletTransactions
-  );
+  router.post("/:id/loans/receive", getLoan);
+  router.get("/:id/wallet-transactions", findAllWalletTransactions);
 
   return router;
-}
-
-async function create(req, res) {
-  const body = req.body;
-
-  try {
-    const agent = await createAgent(body);
-
-    return res.status(201).json({
-      id: agent.id,
-      token: agent.token,
-      name: agent.name,
-      email: agent.email,
-      createdAt: agent.createdAt,
-      updatedAt: agent.updatedAt,
-      wallets: agent.wallets,
-    });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
 }
 
 async function getLoan(req, res) {
